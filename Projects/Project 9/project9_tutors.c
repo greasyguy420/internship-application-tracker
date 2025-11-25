@@ -1,0 +1,224 @@
+/*Name: Joshua Smith
+Summary: This program manages tutors profiles. Users can add, search, print, and clear tutor info*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#define EMAIL_LEN 100
+#define NAME_LEN 30
+#define LEVEL_LEN 30
+
+struct tutor{
+	char first[NAME_LEN+1];
+	char last[NAME_LEN+1];
+	char email[EMAIL_LEN+1];
+	int preferences[3];
+	struct tutor *next;
+};
+
+
+struct tutor *add_to_list(struct tutor *list);
+struct tutor *delete_from_list(struct tutor *list);
+void search_list(struct tutor *list);
+void print_list(struct tutor *list);
+void clear_list(struct tutor *list);
+int read_line(char str[], int n);
+
+/**********************************************************
+ * main: Prompts the user to enter an operation code,     *
+ *       then calls a function to perform the requested   *
+ *       action. Repeats until the user enters the        *
+ *       command 'q'. Prints an error message if the user *
+ *       enters an illegal code.                          *
+ **********************************************************/
+int main(){
+  char code;
+
+  struct tutor *tutor_list = NULL;  
+  printf("Operation Code: a for adding to the list, d for deleting, s for searching, p for printing the list; q for quit.\n");
+  for (;;) {
+    printf("Enter operation code: ");
+    scanf(" %c", &code);
+    while (getchar() != '\n')   /* skips to end of line */
+      ;
+    switch (code) {
+      case 'a': tutor_list = add_to_list(tutor_list);
+                break;
+      case 's': search_list(tutor_list);
+                break;
+      case 'p': print_list(tutor_list);
+                break;
+      case 'd': tutor_list = delete_from_list(tutor_list);
+                break;
+      case 'q': clear_list(tutor_list);
+		return 0;
+      default:  printf("Illegal code\n");
+    }
+    printf("\n");
+  }
+}
+
+//This function adds a tutor to the list keeping the names in alphabetical order
+struct tutor *add_to_list(struct tutor *list){
+    struct tutor *cur, *new_node, *prev;
+    new_node = malloc(sizeof(struct tutor));
+    if (new_node == NULL) {
+        printf("Database is full.\n");
+        return list;
+    }
+    printf("Enter last name: ");
+    read_line(new_node->last, NAME_LEN);
+    printf("Enter first name: ");
+    read_line(new_node->first, NAME_LEN);
+    printf("Enter email address: ");
+    read_line(new_node->email, EMAIL_LEN);
+    printf("Enter preferences: ");
+    scanf("%d %d %d",
+          &new_node->preferences[0],
+          &new_node->preferences[1],
+          &new_node->preferences[2]);
+
+    new_node->next = NULL;
+    if (list == NULL) {
+        return new_node;
+    }
+    prev = NULL;
+    cur = list;
+
+    while (cur != NULL) {
+        int last_cmp = strcmp(new_node->last, cur->last);
+        if (last_cmp < 0) break;
+        if (last_cmp == 0) {
+            int first_cmp = strcmp(new_node->first, cur->first);
+            if (first_cmp < 0) break;
+            if (first_cmp == 0) {
+                while (cur->next &&
+                       strcmp(cur->next->last, new_node->last) == 0 &&
+                       strcmp(cur->next->first, new_node->first) == 0) {
+                    cur = cur->next;
+                }
+                prev = cur;
+                cur = cur->next;
+                break;
+            }
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    if (prev == NULL) {
+        new_node->next = list;
+        return new_node;
+    }
+
+    new_node->next = cur;
+    prev->next = new_node;
+    return list;
+}
+
+
+//This function deletes a specified tutor from the list.
+struct tutor *delete_from_list(struct tutor *list)
+{
+    char first[NAME_LEN + 1];
+    char last[NAME_LEN + 1];
+    char email[EMAIL_LEN + 1];
+
+    struct tutor *cur = list;
+    struct tutor *prev = NULL;
+
+    if (list == NULL) {
+        printf("tutor does not exist.\n");
+        return NULL;
+    }
+
+    printf("Enter last name: ");
+    read_line(last, NAME_LEN);
+
+    printf("Enter first name: ");
+    read_line(first, NAME_LEN);
+
+    printf("Enter email address: ");
+    read_line(email, EMAIL_LEN);
+
+    // Search the list
+    while (cur != NULL) {
+        if (strcmp(cur->last, last) == 0 &&
+            strcmp(cur->first, first) == 0 &&
+            strcmp(cur->email, email) == 0) {
+            if (prev == NULL) {
+              list = cur->next;
+} 
+            else {
+              prev->next = cur->next;
+            }
+            free(cur);
+            return list;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    printf("tutor does not exist.\n");
+    return list;
+}
+
+//This function looks through the linked list for tutors that match the right level and prints them
+void search_list(struct tutor *list){
+    char level[LEVEL_LEN+1];
+    int found = 0;
+    struct tutor *p;
+    printf("Enter level: ");
+    read_line(level, LEVEL_LEN);
+    for (p = list; p != NULL; p = p->next) {
+        if (strcmp(level, "elementary") == 0 && p->preferences[0] == 1) {
+            printf("%-12s%-12s%-30s\n", p->last, p->first, p->email);
+            found = 1;
+        }
+        else if (strcmp(level, "middle") == 0 && p->preferences[1] == 1) {
+            printf("%-12s%-12s%-30s\n", p->last, p->first, p->email);
+            found = 1;
+        }
+        else if (strcmp(level, "high") == 0 && p->preferences[2] == 1) {
+            printf("%-12s%-12s%-30s\n", p->last, p->first, p->email);
+            found = 1;
+        }
+    }
+    if (found == 0)
+        printf("not found\n");
+}
+
+//This function prints the the information of all the tutors
+void print_list(struct tutor *list){
+	struct tutor *p;
+  for (p = list; p != NULL; p = p->next) {
+      printf("%-12s%-12s%-30s%5d%5d%5d\n", p->last, p->first, p->email, p->preferences[0], p->preferences[1], p->preferences[2]);
+  }
+}
+//This function clears the linked list and deallocates the memory
+void clear_list(struct tutor *list){
+  struct tutor *p;
+  while (list != NULL) {
+    p = list;
+    list = list->next;
+    if (p != NULL)
+      free(p);
+  }
+}
+
+
+
+int read_line(char str[], int n)
+{
+  int ch, i = 0;
+  while (isspace(ch = getchar()))
+    ;
+  str[i++] = ch;
+  while ((ch = getchar()) != '\n') {
+    if (i < n)
+      str[i++] = ch;
+   }
+   str[i] = '\0';
+   return i;
+}
