@@ -5,7 +5,14 @@ using namespace std;
 class Application{
     public:
         Application();
-        
+        void display() const;
+        void updateCompany();
+        void updateRole();
+        void updateLocation();
+        void updateStatus();
+        void updateDate();
+        void updateNotes();
+
     private:
         string company;
         string role;
@@ -22,4 +29,13 @@ Application::Application(){
     status = "Not Applied";
     date_applied = "N/A";
     notes = "No notes";
+};
+
+void Application::display() const{
+    cout << company;
+    cout << role;
+    cout << location;
+    cout << status;
+    cout << date_applied;
+    cout << notes;
 };
